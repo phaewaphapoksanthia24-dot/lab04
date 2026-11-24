@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab 04 — Verification summary</title>
+<style>
+  body { margin:0; padding:28px; background:#f4f7f8; color:#22313c; font:15px/1.55 "Segoe UI",Arial,sans-serif; }
+  main { max-width:880px; margin:auto; background:#fff; border:1px solid #dbe3ea; border-radius:14px; padding:26px 30px; }
+  h1 { margin:0 0 4px; font-size:24px; color:#0b6b78; }
+  .sub { margin:0 0 20px; color:#60717e; font-size:13px; }
+  pre { background:#153448; color:#dceef2; border-radius:10px; padding:18px; overflow:auto; font:13px/1.6 Consolas,monospace; white-space:pre-wrap; }
+  .pill { display:inline-block; padding:4px 12px; border-radius:999px; background:#e4f3ef; border:1px solid #b7ded4; color:#0b5d55; font-weight:700; font-size:12px; }
+  .warn { background:#fff4e2; border-color:#eacb96; color:#7b5013; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Lab 04 — Verification summary</h1>
+  <p class="sub">Real ngspice run + browser acceptance + unit tests · captured from this workspace</p>
+  <pre>Command : python -m unittest discover -s .
+Result  : Ran 68 tests in 0.07s
+
+....................................................................
+----------------------------------------------------------------------
+Ran 68 tests in 0.071s
+
+OK
+
+Engine  : ngspice 41 (ngspice_con.exe, conda-forge win-64)
+Health  : {"ngspice":true,"path":"...\\ngspice_con.exe","version":"41"}
+Model   : .model QNPN NPN(BF=100 VAF=100 IS=1e-14)  [demo model]
+
+Browser : B1-B7 PASS · B8 narrow viewport PASS · phone emulation NOT RUN
+Impeccable: before 2 findings -> after [] (exit 0), CSS-only change</pre>
+  <p><span class="pill">68 TESTS OK</span> <span class="pill">ngspice 41</span> <span class="pill warn">demo model</span></p>
+</main>
+</body>
+</html>

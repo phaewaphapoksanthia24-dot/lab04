@@ -1,0 +1,55 @@
+:root{--paper:#f3f7fa;--ink:#17344b;--navy:#103658;--teal:#07766e;--line:#cedde7;--muted:#486275;--shade:#f6fafc;--orange:#a65a2c;--bad:#b23b3b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Noto Sans Thai",Tahoma,Arial,sans-serif;font-size:14.5px;line-height:1.65}
+a{color:#125e8d}input,button{font:inherit}
+.shell{max-width:1280px;margin:0 auto;padding:0 18px}
+.hero{background:var(--navy);border-bottom:5px solid #27ac9c;color:#fff;padding:24px 0}
+.hero .overline{margin:0;font-size:.75rem;letter-spacing:.09em;color:#b6e6e0;font-weight:800}
+.hero h1{margin:6px 0 10px;font-size:clamp(1.5rem,3vw,2.2rem)}
+.hero h1 small{display:block;font-size:.5em;font-weight:500;color:#cde9e6}
+.chips{display:flex;gap:7px;flex-wrap:wrap}
+.chip{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:3px 10px;font-size:.76rem}
+.chip.engine{background:#0c5d56;border-color:#3fb8a8;font-weight:700}
+main{padding:16px 0 32px}
+.notice{border-left:4px solid var(--teal);background:#eaf6f2;padding:10px 14px;border-radius:5px;margin:12px 0;font-size:.87rem}
+.notice.bad{border-left-color:var(--bad);background:#fdeeee;color:#7c2b2b}
+code{background:#edf3f7;padding:1px 4px;border-radius:3px;font-size:.9em}
+.layout{display:grid;grid-template-columns:330px minmax(0,1fr);gap:14px;align-items:start}
+@media(max-width:860px){.layout{grid-template-columns:1fr}}
+.panel{background:#fff;border:1px solid var(--line);border-radius:11px;padding:15px;margin-bottom:14px}
+.panel h2{margin:0 0 10px;font-size:1.05rem;color:var(--navy)}
+fieldset{border:0;border-top:1px solid var(--line);margin:14px 0 0;padding:10px 0 0}
+legend{color:var(--teal);font-size:.75rem;letter-spacing:.07em;font-weight:800;text-transform:uppercase;padding-right:6px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}
+label{display:block;font-size:.75rem;color:var(--muted);font-weight:700;margin-bottom:2px}
+input{width:100%;border:1px solid var(--line);border-radius:6px;padding:6px 8px;background:#fbfdfe}
+input:focus{border-color:var(--teal);outline:2px solid #d5f0e9}
+.hint{font-size:.75rem;color:var(--muted);margin:8px 0 0}
+.actions{display:grid;gap:7px;margin-top:12px}
+.actions{grid-template-columns:repeat(3,minmax(0,1fr))}
+fieldset:last-of-type .actions{grid-template-columns:repeat(3,minmax(0,1fr))}
+button{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:7px;padding:9px 6px;font-weight:750;cursor:pointer;font-size:.82rem}
+button:hover{background:var(--shade)}
+button.primary{background:var(--teal);border-color:var(--teal);color:#fff}
+button.primary.alt{background:#0d6f88;border-color:#0d6f88}
+.result-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.badge{border-radius:999px;padding:3px 10px;font-size:.73rem;font-weight:800;background:#e7f4ef;color:#0a5e57;border:1px solid #a7d5c9}
+.badge.analytical{background:#eef5ff;color:#264c6f;border-color:#b8d2e8}
+.status{font-size:.8rem;color:var(--muted);margin:4px 0}
+.status.ok{color:var(--ok,#0f7a5f);font-weight:700}
+.soft{color:var(--muted);font-size:.83rem}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:10px 0 14px}
+.card{background:var(--shade);border:1px solid var(--line);border-radius:8px;padding:9px 11px}
+.card b{display:block;font-size:.72rem;color:var(--teal);text-transform:uppercase;letter-spacing:.05em}
+.card span{font-weight:750;color:var(--navy);font-variant-numeric:tabular-nums}
+.chart{margin:12px 0;border:1px solid var(--line);border-radius:8px;padding:10px;background:#fcfdff}
+.chart figcaption{font-size:.82rem;font-weight:800;color:var(--navy);margin-bottom:6px}
+.chart svg{display:block;width:100%;height:auto}
+details{border:1px solid var(--line);border-radius:8px;padding:9px 11px;margin-top:10px;font-size:.8rem}
+summary{cursor:pointer;font-weight:750;color:var(--navy)}
+pre{background:#122e42;color:#d8eef0;border-radius:6px;padding:10px;overflow:auto;font-size:.72rem;line-height:1.5;margin:8px 0 0;white-space:pre-wrap;word-break:break-word}
+table{width:100%;border-collapse:collapse;font-size:.83rem}
+th,td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:left}
+th{background:#eaf2f8;color:var(--navy)}
+td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.panel.empty{color:var(--muted)}

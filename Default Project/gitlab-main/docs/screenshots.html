@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab 04 — Screenshot evidence</title>
+<style>
+  body { margin:0; padding:24px; background:#eef3f5; color:#22313c; font:14px/1.5 "Segoe UI",Arial,sans-serif; }
+  header { max-width:1200px; margin:0 auto 20px; background:#fff; border:1px solid #dbe3ea; border-radius:14px; padding:20px 24px; }
+  h1 { margin:0 0 6px; color:#0b6b78; font-size:24px; }
+  p { margin:4px 0; color:#52626e; }
+  .tags span { display:inline-block; margin:6px 6px 0 0; padding:4px 10px; border-radius:999px; background:#e4f3ef; border:1px solid #b7ded4; color:#0b5d55; font-weight:700; font-size:12px; }
+  .tags .warn { background:#fff4e2; border-color:#eacb96; color:#7b5013; }
+  main { max-width:1200px; margin:auto; display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:16px; }
+  figure { margin:0; background:#fff; border:1px solid #dbe3ea; border-radius:12px; overflow:hidden; }
+  figure img { width:100%; display:block; border-bottom:1px solid #e6ecf0; background:#fafcfd; }
+  figcaption { padding:10px 12px; }
+  figcaption b { display:block; color:#0b6b78; font-size:13px; }
+  figcaption span { color:#60717e; font-size:12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Lab 04 — หลักฐานภาพหน้าจอทั้งหมด</h1>
+  <p>Results captured from the real Flask app at http://127.0.0.1:5000 · ngspice 41 · Browser + unittest + Impeccable</p>
+  <div class="tags"><span>B1–B7 PASS</span><span>B8 narrow PASS</span><span>68 tests OK</span><span class="warn">phone emulation NOT RUN</span><span class="warn">demo model</span></div>
+</header>
+<main>
+  <figure><img src="images/lab03-b1-divider.png" alt="B1 Divider"><figcaption><b>B1 · Lab 03 Divider (regression)</b><span>VB 1.94 V · VE 1.24 V · VC 9.29 V · VCE 8.05 V · IC 1.23 mA</span></figcaption></figure>
+  <figure><img src="images/lab03-b1-fixed.png" alt="B1 Fixed"><figcaption><b>B1 · Lab 03 Fixed (regression)</b><span>VB 0.70 V · VE 0.00 V · VC 9.51 V · VCE 9.51 V · IC 1.13 mA</span></figcaption></figure>
+  <figure><img src="images/lab03-b1-emitter.png" alt="B1 Emitter"><figcaption><b>B1 · Lab 03 Emitter (regression)</b><span>VB 1.74 V · VE 1.04 V · VC 9.74 V · VCE 8.71 V · IC 1.03 mA</span></figcaption></figure>
+  <figure><img src="images/lab03-a4-emitter.png" alt="A4 Emitter RE 2k"><figcaption><b>A4 · Lab 03 Emitter, RE = 2 kΩ</b><span>IC ลดลงเป็น 0.94 mA · VCE 8.03 V</span></figcaption></figure>
+  <figure><img src="images/lab03-a5-rb-error.png" alt="A5 RB error"><figcaption><b>A5 · Lab 03 RB = 0 validation</b><span>Must be greater than 0. · ไม่มีตารางผลค้าง</span></figcaption></figure>
+  <figure><img src="images/active.png" alt="Active region"><figcaption><b>Lab 03 · Active region example</b><span>Voltage divider bias, VCC 12 V</span></figcaption></figure>
+  <figure><img src="images/cutoff.png" alt="Cutoff region"><figcaption><b>Lab 03 · Cutoff region example</b><span>VBB ต่ำกว่า VBE</span></figcaption></figure>
+  <figure><img src="images/saturation.png" alt="Saturation region"><figcaption><b>Lab 03 · Saturation region example</b><span>VCE ติดลบ · แสดงคำเตือน</span></figcaption></figure>
+
+  <figure><img src="images/lab04-health-200.png" alt="health 200"><figcaption><b>Engine health · /health</b><span>ngspice true · version 41 · ngspice_con.exe</span></figcaption></figure>
+  <figure><img src="images/lab04-dc-success.png" alt="B2 DC"><figcaption><b>B2 · DC operating point (.op)</b><span>VB 1.9491 V · VE 1.2895 V · VC 9.1894 V · VCE 7.9000 V · IC 1.2775 mA</span></figcaption></figure>
+  <figure><img src="images/lab04-dc-re2.png" alt="B3 RE 2k"><figcaption><b>B3 · เปลี่ยน RE 1 kΩ → 2 kΩ</b><span>VB 2.0482 V · VE 1.4045 V · VCE 9.0646 V · IC 0.6959 mA</span></figcaption></figure>
+  <figure><img src="images/lab04-ac-success.png" alt="B4 AC"><figcaption><b>B4 · AC Bode (.ac)</b><span>Midband 4.86 dB · fL 1.41 Hz · fH not determined · 161 points</span></figcaption></figure>
+  <figure><img src="images/lab04-tran-success.png" alt="B5 Transient"><figcaption><b>B5 · Transient (.tran) 10 mV @ 1 kHz</b><span>Vin 10.00 mV · Vout 17.50 mV · gain 4.86 dB · phase 179.9°</span></figcaption></figure>
+  <figure><img src="images/lab04-source-change.png" alt="B6 Source change"><figcaption><b>B6 · เปลี่ยน Vin 10 mV → 20 mV @ 2 kHz</b><span>Vin 20.00 mV · Vout 35.00 mV · phase 180.0°</span></figcaption></figure>
+  <figure><img src="images/lab04-b7-re0.png" alt="B7 RE zero"><figcaption><b>B7 · Invalid RE = 0</b><span>Run failed · Must be greater than 0. · ไม่มีผลจากรอบก่อน</span></figcaption></figure>
+  <figure><img src="images/lab04-narrow-engine-error.png" alt="B7 engine error"><figcaption><b>B7 · Engine ไม่พร้อม / narrow viewport</b><span>Run failed แสดงชัด · ไม่มีกราฟปลอม · /health 503 ตอนไม่มี engine</span></figcaption></figure>
+
+  <figure><img src="images/unittest-68-ok.png" alt="68 tests OK"><figcaption><b>Unit test · 68 tests OK</b><span>python -m unittest discover -s . · 49 Lab 03 + 19 Lab 04</span></figcaption></figure>
+  <figure><img src="images/lab04-ui-before.png" alt="UI before"><figcaption><b>Impeccable · before</b><span>side-tab + first-viewport-column-overflow (2 findings)</span></figcaption></figure>
+  <figure><img src="images/lab04-ui-after.png" alt="UI after"><figcaption><b>Impeccable · after</b><span>[] · exit 0 · CSS-only · ผล DC ไม่เปลี่ยน</span></figcaption></figure>
+</main>
+</body>
+</html>

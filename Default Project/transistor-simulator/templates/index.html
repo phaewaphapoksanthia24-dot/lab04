@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ENG29 2121 · Lab 04 — BJT Amplifier Simulator</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="hero"><div class="shell">
+  <p class="overline">ENG29 2121 · LAB 04 · BJT AMPLIFIER SIMULATOR v1</p>
+  <h1>CE Amplifier Simulator <small>Flask + ngspice · DC / AC / Transient</small></h1>
+  <div class="chips">
+    <span class="chip">Lab 3: Fixed / Emitter / Divider (Analytical)</span>
+    <span class="chip">Lab 4: CE Voltage Divider (SPICE)</span>
+    <span class="chip engine">ENGINE: ngspice</span>
+  </div>
+</div></header>
+
+<main class="shell">
+  <div class="notice">
+    <strong>Provenance:</strong> ผลในพื้นที่ <em>SPICE</em> มาจากการรัน ngspice จริงผ่าน <code>subprocess</code>
+    ส่วนพื้นที่ <em>Analytical (Lab 3)</em> มาจากสมการประมาณใน <code>dc_bias.py</code> — อย่านำสองชุดนี้มารวมกัน
+  </div>
+
+  {% if error %}
+  <div class="notice bad" role="alert"><strong>Run failed:</strong> {{ error }}</div>
+  {% endif %}
+
+  <div class="layout">
+    <!-- ============ FORM ============ -->
+    <section class="panel">
+      <h2>Circuit &amp; Parameters</h2>
+      <form method="post" action="/">
+        <fieldset>
+          <legend>CE reference · ngspice</legend>
+          <div class="grid2">
+            <div><label>VCC (V)</label><input name="vcc" step="any" value="{{ form.vcc }}"></div>
+            <div><label>R1 (kΩ)</label><input name="r1" step="any" value="{{ form.r1 }}"></div>
+            <div><label>R2 (kΩ)</label><input name="r2" step="any" value="{{ form.r2 }}"></div>
+            <div><label>RC (kΩ)</label><input name="rc" step="any" value="{{ form.rc }}"></div>
+            <div><label>RE (kΩ)</label><input name="re" step="any" value="{{ form.re }}"></div>
+            <div><label>RL (kΩ)</label><input name="rl" step="any" value="{{ form.rl }}"></div>
+            <div><label>Cin (µF)</label><input name="cin" step="any" value="{{ form.cin }}"></div>
+            <div><label>Cout (µF)</label><input name="cout" step="any" value="{{ form.cout }}"></div>
+            <div><label>BF (β)</label><input name="bf" step="any" value="{{ form.bf }}"></div>
+            <div><label>VAF (V)</label><input name="vaf" step="any" value="{{ form.vaf }}"></div>
+            <div><label>IS (A)</label><input name="isat" step="any" value="{{ form.isat }}"></div>
+            <div><label>Vin pk (mV)</label><input name="amp_mv" step="any" value="{{ form.amp_mv }}"></div>
+            <div><label>Freq (kHz)</label><input name="freq_khz" step="any" value="{{ form.freq_khz }}"></div>
+          </div>
+          <p class="hint">Model: <code>.model QNPN NPN(BF, VAF, IS)</code> — เปลี่ยนให้ตรง BJT model จาก Starter Kit ของอาจารย์</p>
+          <div class="actions">
+            <button class="primary" name="action" value="dc">▶ Run DC (.op)</button>
+            <button class="primary alt" name="action" value="ac">▶ Run AC (.ac)</button>
+            <button class="primary alt" name="action" value="tran">▶ Run Transient (.tran)</button>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Lab 3 · Analytical DC Bias</legend>
+          <div class="grid2">
+            <div><label>VCC (V)</label><input name="b_vcc" step="any" value="{{ form.b_vcc }}"></div>
+            <div><label>β</label><input name="b_beta" step="any" value="{{ form.b_beta }}"></div>
+            <div><label>VBE (V)</label><input name="b_vbe" step="any" value="{{ form.b_vbe }}"></div>
+            <div><label>RB (kΩ)</label><input name="b_rb" step="any" value="{{ form.b_rb }}"></div>
+            <div><label>RC (kΩ)</label><input name="b_rc" step="any" value="{{ form.b_rc }}"></div>
+            <div><label>RE (kΩ)</label><input name="b_re" step="any" value="{{ form.b_re }}"></div>
+            <div><label>R1 (kΩ)</label><input name="b_r1" step="any" value="{{ form.b_r1 }}"></div>
+            <div><label>R2 (kΩ)</label><input name="b_r2" step="any" value="{{ form.b_r2 }}"></div>
+          </div>
+          <div class="actions">
+            <button name="action" value="fixed">Fixed</button>
+            <button name="action" value="emitter">Emitter</button>
+            <button name="action" value="divider">Voltage Divider</button>
+          </div>
+        </fieldset>
+      </form>
+    </section>
+
+    <!-- ============ RESULTS ============ -->
+    <div class="results-col">
+      {% if spice %}
+      <section class="panel">
+        <div class="result-head">
+          <h2>SPICE Results · {{ spice.mode|upper }}</h2>
+          <span class="badge">ngspice {{ spice.version }}</span>
+        </div>
+        <p class="status ok">● Run status: {{ spice.status }} · provenance: {{ spice.provenance }}</p>
+        <p class="soft">Model: <code>{{ spice.model }}</code></p>
+
+        {% if spice.mode == 'dc' %}
+          <div class="cards">
+            <div class="card"><b>VB</b><span>{{ '%.4f'|format(spice.data.vb) }} V</span></div>
+            <div class="card"><b>VE</b><span>{{ '%.4f'|format(spice.data.ve) }} V</span></div>
+            <div class="card"><b>VC</b><span>{{ '%.4f'|format(spice.data.vc) }} V</span></div>
+            <div class="card"><b>VCE</b><span>{{ '%.4f'|format(spice.data.vce) }} V</span></div>
+            <div class="card"><b>IC</b><span>{{ '%.4f'|format(spice.data.ic_ma) }} mA</span></div>
+            <div class="card"><b>IB</b><span>{{ '%.3f'|format(spice.data.ib_ua) }} µA</span></div>
+            <div class="card"><b>Region</b><span>{{ spice.data.region }}</span></div>
+          </div>
+        {% elif spice.mode == 'ac' %}
+          <div class="cards">
+            <div class="card"><b>Midband gain</b><span>{{ '%.2f'|format(spice.data.midband_gain_db) }} dB</span></div>
+            <div class="card"><b>fL (−3 dB)</b><span>{{ 'not determined in sweep range' if spice.data.f_low_hz is none else (spice.data.f_low_hz|round(2)|string ~ ' Hz') }}</span></div>
+            <div class="card"><b>fH (−3 dB)</b><span>{{ 'not determined in sweep range' if spice.data.f_high_hz is none else (spice.data.f_high_hz|round(2)|string ~ ' Hz') }}</span></div>
+            <div class="card"><b>Points</b><span>{{ spice.data.points }}</span></div>
+          </div>
+        {% else %}
+          <div class="cards">
+            <div class="card"><b>Vin peak</b><span>{{ '%.2f'|format(spice.data.vin_peak_mv) }} mV</span></div>
+            <div class="card"><b>Vout peak</b><span>{{ '%.2f'|format(spice.data.vout_peak_mv) }} mV</span></div>
+            <div class="card"><b>Gain @ f0</b><span>{{ '%.2f'|format(spice.data.gain_db) }} dB</span></div>
+            <div class="card"><b>Phase</b><span>{{ '%.1f'|format(spice.data.phase_deg) }}° · {{ spice.data.relationship }}</span></div>
+          </div>
+        {% endif %}
+
+        <figure class="chart">
+          <figcaption id="titleA">Simulation plot</figcaption>
+          <svg id="plotA" viewBox="0 0 660 280" role="img" aria-label="Simulation plot A"></svg>
+        </figure>
+        <figure class="chart">
+          <figcaption id="titleB">Secondary plot</figcaption>
+          <svg id="plotB" viewBox="0 0 660 220" role="img" aria-label="Simulation plot B"></svg>
+        </figure>
+
+        <details>
+          <summary>Netlist ที่ส่งให้ ngspice ({{ spice.mode|upper }})</summary>
+          <pre>{{ spice.netlist }}</pre>
+        </details>
+        <details>
+          <summary>ngspice run log (t้าย ๆ)</summary>
+          <pre>{{ spice.log_excerpt }}</pre>
+        </details>
+      </section>
+      {% endif %}
+
+      {% if analytical %}
+      <section class="panel">
+        <div class="result-head">
+          <h2>Analytical Results · {{ analytical_mode|upper }}</h2>
+          <span class="badge analytical">dc_bias.py · Lab 3</span>
+        </div>
+        <p class="status">● ที่มา: สมการประมาณ β + VBE คงที่ (ไม่ใช่ SPICE)</p>
+        <table>
+          <thead><tr><th>Quantity</th><th>Value</th></tr></thead>
+          <tbody>
+            {% for key, value in analytical.items() %}
+            <tr><td>{{ key }}</td><td class="num">{{ value }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+      {% endif %}
+
+      {% if not spice and not analytical and not error %}
+      <section class="panel empty">
+        <h2>Results</h2>
+        <p class="soft">ยังไม่มีการรัน — เลือก DC / AC / Transient หรือเลือก Lab 3 bias mode แล้วกดปุ่ม</p>
+      </section>
+      {% endif %}
+    </div>
+  </div>
+</main>
+
+<script>window.SIM = {{ (spice | tojson) if spice else 'null' }};</script>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

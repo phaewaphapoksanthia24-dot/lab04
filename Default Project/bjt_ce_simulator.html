@@ -1,0 +1,861 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ENG29 2121 · Lab 04 — BJT CE Amplifier Simulator (Single-file HTML)</title>
+<style>
+:root{
+  --paper:#f3f7fa; --ink:#17344b; --navy:#103658; --teal:#07766e;
+  --teal-light:#eaf6f2; --line:#cedde7; --muted:#486275; --shade:#f6fafc;
+  --orange:#a65a2c; --warn:#fff4ea; --ok:#0f7a5f; --bad:#b23b3b;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Noto Sans Thai",Tahoma,Arial,sans-serif;font-size:14.5px;line-height:1.65}
+a{color:#125e8d}button,input,select{font:inherit}
+:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.shell{max-width:1400px;margin:0 auto;padding:0 18px}
+
+/* ---------- header ---------- */
+.hero{background:var(--navy);border-bottom:5px solid #27ac9c;color:#fff;padding:26px 0 24px}
+.hero .overline{font-size:.76rem;font-weight:800;letter-spacing:.1em;color:#b6e6e0;margin:0}
+.hero h1{font-size:clamp(1.55rem,3.2vw,2.4rem);line-height:1.2;margin:6px 0 8px;letter-spacing:-.02em}
+.hero h1 small{display:block;font-size:.46em;font-weight:500;color:#cde9e6;margin-top:6px;letter-spacing:0}
+.hero-meta{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.chip{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:3px 10px;font-size:.77rem}
+.chip.eng{background:#0c5d56;border-color:#3fb8a8;color:#e8fffb;font-weight:700}
+
+/* ---------- notices ---------- */
+main{padding:16px 0 30px}
+.notice{border-left:4px solid var(--teal);background:var(--teal-light);padding:10px 14px;border-radius:5px;margin:14px 0;font-size:.88rem}
+.notice.warn{border-left-color:var(--orange);background:var(--warn);color:#714321}
+.notice strong{font-weight:800}
+
+/* ---------- top tabs ---------- */
+.viewtabs{display:flex;gap:8px;margin:14px 0 10px;flex-wrap:wrap}
+.viewtabs button{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:700;font-size:.86rem}
+.viewtabs button[aria-selected="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+[hidden]{display:none !important}
+
+/* ---------- sim layout ---------- */
+.layout{display:grid;grid-template-columns:330px minmax(0,1fr) 290px;gap:14px;align-items:start}
+@media(max-width:1180px){.layout{grid-template-columns:300px minmax(0,1fr)}.results{grid-column:1/-1}}
+@media(max-width:820px){.layout{grid-template-columns:1fr}.results{grid-column:auto}}
+.panel{background:#fff;border:1px solid var(--line);border-radius:11px;padding:15px;box-shadow:0 1px 2px rgba(16,54,88,.04)}
+.panel h2{font-size:1.02rem;color:var(--navy);margin:0 0 10px;line-height:1.35}
+.panel h3{font-size:.8rem;letter-spacing:.06em;color:var(--teal);text-transform:uppercase;margin:16px 0 8px}
+fieldset{border:0;border-top:1px solid var(--line);margin:12px 0 0;padding:10px 0 0}
+legend{font-size:.76rem;letter-spacing:.07em;color:var(--teal);font-weight:800;text-transform:uppercase;padding:0 6px 0 0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}
+label{display:block;font-size:.76rem;color:var(--muted);font-weight:700;margin-bottom:2px}
+label span{color:var(--teal)}
+input[type=number]{width:100%;border:1px solid var(--line);border-radius:6px;padding:6px 8px;background:#fbfdfe;color:var(--ink);font-variant-numeric:tabular-nums}
+input[type=number]:focus{border-color:var(--teal);outline:2px solid var(--teal-light)}
+input.dirty{background:#fff8ee;border-color:#d9a468}
+.actions{display:grid;gap:8px;margin-top:14px}
+button.primary{border:0;background:var(--teal);color:#fff;border-radius:7px;padding:11px;font-weight:800;cursor:pointer;box-shadow:0 2px 0 #05564f}
+button.primary:hover{background:#06635c}
+button.primary:active{transform:translateY(1px);box-shadow:none}
+button.ghost{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:7px;padding:8px;font-weight:700;cursor:pointer}
+button.ghost:hover{background:var(--shade)}
+.hint{font-size:.75rem;color:var(--muted);margin-top:7px}
+
+/* schematic */
+.schem{width:100%;height:auto;margin-top:12px;border:1px solid var(--line);border-radius:8px;background:#fbfdfe}
+.schem text{font-family:Tahoma,Arial,sans-serif}
+.nodeval{fill:#0b6f66;font-weight:700;font-size:11px}
+
+/* ---------- center ---------- */
+.modebar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.modebar button{border:1px solid var(--line);background:#fff;border-radius:7px;padding:7px 16px;cursor:pointer;color:var(--navy);font-weight:750;font-size:.85rem}
+.modebar button[aria-pressed="true"]{background:var(--teal-light);border-color:var(--teal);color:#0a5e57;box-shadow:inset 0 -3px 0 var(--teal)}
+.statusline{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin:0 0 10px}
+.dot{width:9px;height:9px;border-radius:50%;background:#9bb0bd;display:inline-block}
+.dot.ok{background:var(--ok)}.dot.bad{background:var(--bad)}.dot.warn{background:#c8872f}
+.chart{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 12px 6px;margin-bottom:12px}
+.chart .ctitle{font-size:.83rem;font-weight:800;color:var(--navy);margin:0 0 2px}
+.chart .csub{font-size:.73rem;color:var(--muted);margin:0 0 4px}
+.chart svg{display:block;width:100%;height:auto;background:#fcfdff;border-radius:6px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.74rem;color:var(--muted);padding:3px 4px 6px}
+.legend i{display:inline-block;width:12px;height:3px;border-radius:2px;margin-right:5px;vertical-align:middle}
+
+/* ---------- results ---------- */
+.results{display:grid;gap:10px}
+.badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:.73rem;font-weight:800;background:var(--teal-light);color:#0a5e57;border:1px solid #a7d5c9}
+.badge.mock{background:#fff4e8;color:#8a4a20;border-color:#e6b98c}
+.rescard{border:1px solid var(--line);border-radius:8px;padding:10px 11px;background:var(--shade)}
+.rescard h4{margin:0 0 7px;font-size:.74rem;letter-spacing:.06em;color:var(--teal);text-transform:uppercase}
+.kv{display:grid;grid-template-columns:1fr auto;gap:3px 8px;font-size:.82rem}
+.kv dt{color:var(--muted)}.kv dd{margin:0;text-align:right;font-variant-numeric:tabular-nums;font-weight:750;color:var(--navy)}
+.kv dd small{font-weight:500;color:var(--muted)}
+details{border:1px solid var(--line);border-radius:8px;background:#fff;padding:9px 11px;font-size:.8rem}
+summary{cursor:pointer;font-weight:750;color:var(--navy)}
+details ul{margin:8px 0 0;padding-left:1.25em}
+pre{background:#122e42;color:#d8eef0;border-radius:6px;padding:10px;overflow:auto;font-size:.72rem;line-height:1.5;margin:8px 0 0;white-space:pre-wrap;word-break:break-word}
+
+/* ---------- lab3 ---------- */
+.biaswrap{display:grid;grid-template-columns:330px minmax(0,1fr);gap:14px;align-items:start}
+@media(max-width:820px){.biaswrap{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th,td{padding:8px 9px;border-bottom:1px solid var(--line);text-align:left}
+th{background:#eaf2f8;color:var(--navy);font-size:.75rem}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+tr:nth-child(even) td{background:#f9fbfd}
+footer{max-width:1400px;margin:auto;color:var(--muted);font-size:.75rem;padding:0 18px 28px}
+</style>
+</head>
+<body>
+
+<header class="hero"><div class="shell">
+  <p class="overline">ENG29 2121 · COMPUTER PROGRAMMING FOR ELECTRICAL ENGINEERS · LAB 04</p>
+  <h1>BJT CE Amplifier Simulator v1
+    <small>Single-file HTML · DC / AC / Transient · Browser Analytical Model</small>
+  </h1>
+  <div class="hero-meta">
+    <span class="chip">VCC 12 V · R1 100 kΩ · R2 22 kΩ</span>
+    <span class="chip">RC 2.2 kΩ · RE 1 kΩ · RL 10 kΩ</span>
+    <span class="chip">10 mVpk · 1 kHz</span>
+    <span class="chip eng">⚠ ENGINE: JavaScript (ไม่ใช่ ngspice)</span>
+  </div>
+</div></header>
+
+<main class="shell">
+  <div class="notice warn">
+    <strong>หมายเหตุความถูกต้องก่อนใช้งาน:</strong> ไฟล์นี้คำนวณ DC operating point และ small-signal AC/transient ด้วย <strong>สมการวิเคราะห์ในเบราว์เซอร์ (JavaScript)</strong> เท่านั้น
+    — <strong>ไม่ได้เรียก ngspice และไม่ใช่หลักฐานผลจำลองตามใบงาน</strong> ใช้เพื่อสาธิต UI, ตรวจสมการ/หน่วย และทำความเข้าใจพฤติกรรมวงจรเบื้องต้น
+    สำหรับงานที่ส่งอาจารย์仍需เป็น Flask + <code>spice_engine.py</code> + ngspice จริงตามใบงาน Lab 04
+  </div>
+
+  <div class="viewtabs" role="tablist" aria-label="มุมมอง">
+    <button role="tab" id="tab-sim" aria-selected="true" aria-controls="view-sim">CE Simulator · DC / AC / Transient</button>
+    <button role="tab" id="tab-bias" aria-selected="false" aria-controls="view-bias">Lab 3 · DC Bias 3 โหมด (Analytical)</button>
+  </div>
+
+  <!-- ======================= SIMULATOR ======================= -->
+  <div id="view-sim" role="tabpanel" aria-labelledby="tab-sim">
+    <div class="layout">
+
+      <!-- LEFT: parameters -->
+      <section class="panel" aria-label="Circuit parameters">
+        <h2>Circuit &amp; Parameters</h2>
+        <form id="simForm" novalidate>
+          <fieldset><legend>CE Voltage Divider · Reference</legend>
+            <div class="grid2">
+              <div><label for="VCC">VCC <span>(V)</span></label><input id="VCC" type="number" step="any" value="12"></div>
+              <div><label for="R1">R1 <span>(kΩ)</span></label><input id="R1" type="number" step="any" value="100"></div>
+              <div><label for="R2">R2 <span>(kΩ)</span></label><input id="R2" type="number" step="any" value="22"></div>
+              <div><label for="RC">RC <span>(kΩ)</span></label><input id="RC" type="number" step="any" value="2.2"></div>
+              <div><label for="RE">RE <span>(kΩ)</span></label><input id="RE" type="number" step="any" value="1"></div>
+              <div><label for="RL">RL <span>(kΩ)</span></label><input id="RL" type="number" step="any" value="10"></div>
+              <div><label for="Cin">Cin <span>(µF)</span></label><input id="Cin" type="number" step="any" value="10"></div>
+              <div><label for="Cout">Cout <span>(µF)</span></label><input id="Cout" type="number" step="any" value="10"></div>
+            </div>
+          </fieldset>
+          <fieldset><legend>Transistor &amp; Source</legend>
+            <div class="grid2">
+              <div><label for="beta">β (BF) <span>—</span></label><input id="beta" type="number" step="any" value="100"></div>
+              <div><label for="VBE">VBE <span>(V)</span></label><input id="VBE" type="number" step="any" value="0.7"></div>
+              <div><label for="VT">VT <span>(mV)</span></label><input id="VT" type="number" step="any" value="25"></div>
+              <div><label for="VA">VA <span>(V, 0=ไม่ใช้ ro)</span></label><input id="VA" type="number" step="any" value="100"></div>
+              <div><label for="Rs">Rs <span>(Ω)</span></label><input id="Rs" type="number" step="any" value="50"></div>
+              <div><label for="amp">Vin pk <span>(mV)</span></label><input id="amp" type="number" step="any" value="10"></div>
+              <div><label for="freq">Freq <span>(kHz)</span></label><input id="freq" type="number" step="any" value="1"></div>
+            </div>
+          </fieldset>
+          <div class="actions">
+            <button class="primary" type="submit">▶ Run Simulation</button>
+            <button class="ghost" type="button" id="resetBtn">↺ Reset defaults</button>
+          </div>
+          <p class="hint">AC sweep: 0.1 Hz → 10 MHz (220 จุด, log) · Transient: 3 periods · แก้ค่าแล้วกด Run</p>
+        </form>
+
+        <svg class="schem" viewBox="0 0 420 275" role="img" aria-label="วงจร Common-Emitter แบบ Voltage Divider">
+          <g fill="none" stroke="#3b6377" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M95 30H300 M95 30V52 M300 30V52 M95 112V150 M95 150V172 M95 226V248 M20 248H400"/>
+            <rect x="88" y="52" width="14" height="60" fill="#fff"/>
+            <rect x="88" y="172" width="14" height="54" fill="#fff"/>
+            <circle cx="205" cy="150" r="34" fill="#fff"/>
+            <path d="M95 150H171 M171 137V163 M171 143L244 88 H300 M171 160L244 204 H300 V248"/>
+            <path d="M218 176L244 204 M232 194L238 184L250 200Z" fill="#3b6377" stroke-width="1.2"/>
+            <rect x="293" y="52" width="14" height="36" fill="#fff"/>
+            <rect x="293" y="204" width="14" height="44" fill="#fff"/>
+            <path d="M300 88H356 M368 88H382 V248"/>
+            <rect x="374" y="130" width="14" height="42" fill="#fff"/>
+            <path d="M40 150H62 M74 150H95"/>
+            <path d="M62 133V167 M74 133V167"/>
+            <circle cx="30" cy="150" r="10" fill="#fff"/>
+            <path d="M23 151Q26 145 30 151T37 151" stroke-width="1.3"/>
+          </g>
+          <g fill="#254d67" font-size="11">
+            <text x="196" y="22" font-weight="700">+VCC</text>
+            <text x="108" y="86">R1</text><text x="108" y="202">R2</text>
+            <text x="312" y="76">RC</text><text x="312" y="230">RE</text>
+            <text x="176" y="126" font-weight="700">Q1</text>
+            <text x="68" y="127">Cin</text><text x="359" y="78">Cout</text>
+            <text x="392" y="152">RL</text><text x="10" y="180">Vin</text>
+            <text x="205" y="266" text-anchor="middle">GND</text>
+          </g>
+          <g class="nodeval">
+            <text x="112" y="146" id="lblVB">VB = –</text>
+            <text x="250" y="222" id="lblVE">VE = –</text>
+            <text x="250" y="84" id="lblVC">VC = –</text>
+          </g>
+        </svg>
+      </section>
+
+      <!-- CENTER: plots -->
+      <section class="panel" aria-label="Simulation and plots">
+        <div class="modebar" role="group" aria-label="Analysis mode">
+          <button data-mode="dc" aria-pressed="true">DC · .op</button>
+          <button data-mode="ac" aria-pressed="false">AC · .ac</button>
+          <button data-mode="tran" aria-pressed="false">Transient · .tran</button>
+        </div>
+        <p class="statusline"><span class="dot" id="runDot"></span><span id="runStatus">Ready · กด Run Simulation เพื่อคำนวณ</span></p>
+
+        <div class="chart" id="chartA">
+          <p class="ctitle" id="titleA">DC node voltages</p>
+          <p class="csub" id="subA">ค่าจากโมเดล DC ในเบราว์เซอร์</p>
+          <svg id="plotA" viewBox="0 0 660 280" role="img" aria-label="Plot A"></svg>
+          <div class="legend" id="legendA"></div>
+        </div>
+
+        <div class="chart" id="chartB">
+          <p class="ctitle" id="titleB">DC currents &amp; headroom</p>
+          <p class="csub" id="subB">IB / IC / VCE</p>
+          <svg id="plotB" viewBox="0 0 660 220" role="img" aria-label="Plot B"></svg>
+          <div class="legend" id="legendB"></div>
+        </div>
+
+        <div class="notice" style="margin-top:2px">
+          <strong>Provenance:</strong> ทุกค่าบนหน้านี้มาจากสมการ analytical (Thevenin + hybrid-π small-signal)
+          ผ่าน <code>JavaScript</code> ในไฟล์เดียวนี้ — ไม่มี netlist ถูกส่งไปยัง solver ภายนอก
+        </div>
+      </section>
+
+      <!-- RIGHT: results -->
+      <aside class="panel results" aria-label="Engineering results">
+        <div>
+          <span class="badge mock">⚠ Browser model</span>
+          <h2 style="margin-top:9px">Engineering Results</h2>
+        </div>
+        <div id="resultBox"></div>
+        <details>
+          <summary>Assumptions &amp; model</summary>
+          <ul>
+            <li>DC: Thevenin R1||R2, VBE คงที่, β คงที่</li>
+            <li>AC: hybrid-π (gm = IC/VT, rπ = β/gm, ro = VA/IC)</li>
+            <li>Coupling caps รวมใน nodal analysis (5 nodes, complex)</li>
+            <li>Transient = small-signal sinusoidal steady-state</li>
+            <li>ไม่จำลอง clipping/saturation แบบ large-signal</li>
+            <li>Vin วัดที่ base หลัง Cin, Vout วัดที่ RL หลัง Cout</li>
+          </ul>
+        </details>
+        <details>
+          <summary>Netlist preview (อย่างเดียว — ยังไม่ได้รัน)</summary>
+          <pre id="netlist">กด Run Simulation ก่อน</pre>
+        </details>
+      </aside>
+    </div>
+  </div>
+
+  <!-- ======================= LAB 3 ======================= -->
+  <div id="view-bias" role="tabpanel" aria-labelledby="tab-bias" hidden>
+    <div class="biaswrap">
+      <section class="panel">
+        <h2>DC Bias · 3 modes (Lab 3)</h2>
+        <form id="biasForm" novalidate>
+          <fieldset><legend>Common</legend>
+            <div class="grid2">
+              <div><label for="bVCC">VCC (V)</label><input id="bVCC" type="number" step="any" value="12"></div>
+              <div><label for="bBeta">β</label><input id="bBeta" type="number" step="any" value="100"></div>
+              <div><label for="bVBE">VBE (V)</label><input id="bVBE" type="number" step="any" value="0.7"></div>
+            </div>
+          </fieldset>
+          <fieldset><legend>Resistors</legend>
+            <div class="grid2">
+              <div><label for="bRB">RB (kΩ)</label><input id="bRB" type="number" step="any" value="470"></div>
+              <div><label for="bRC">RC (kΩ)</label><input id="bRC" type="number" step="any" value="2.2"></div>
+              <div><label for="bRE">RE (kΩ)</label><input id="bRE" type="number" step="any" value="1"></div>
+              <div><label for="bR1">R1 (kΩ)</label><input id="bR1" type="number" step="any" value="100"></div>
+              <div><label for="bR2">R2 (kΩ)</label><input id="bR2" type="number" step="any" value="22"></div>
+            </div>
+          </fieldset>
+          <div class="actions"><button class="primary" type="submit">Calculate 3 modes</button></div>
+          <p class="hint">Fixed = emitter ต่อกราวด์ · Emitter = RB อย่างเดียว + RE · Divider = R1/R2 + RE</p>
+        </form>
+      </section>
+      <section class="panel">
+        <h2>Analytical comparison</h2>
+        <div class="scroll" style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Mode</th><th>IB (µA)</th><th>IC (mA)</th><th>VB (V)</th><th>VE (V)</th><th>VC (V)</th><th>VCE (V)</th><th>Region</th></tr></thead>
+            <tbody id="biasBody"></tbody>
+          </table>
+        </div>
+        <details style="margin-top:12px">
+          <summary>สมการที่ใช้</summary>
+          <ul>
+            <li>Fixed: IB = (VCC − VBE)/RB, IC = βIB, VCE = VCC − IC·RC</li>
+            <li>Emitter: IB = (VCC − VBE)/(RB + (β+1)RE)</li>
+            <li>Divider: VTH = VCC·R2/(R1+R2), RTH = R1||R2, IB = (VTH − VBE)/(RTH + (β+1)RE)</li>
+          </ul>
+        </details>
+        <div class="notice info" style="margin-top:12px">ผลจากตารางนี้คือ <strong>analytical reference</strong> เท่านั้น เมื่อทำโปรเจกต์จริงต้องแยกป้ายออกจากผล ngspice เสมอ</div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<footer>ENG29 2121 · Lab 04 · ไฟล์ HTML เดียวเพื่อการเรียนรู้/สาธิต — งานที่ประเมินต้องเป็น Flask Web App + ngspice จริงตามใบงาน</footer>
+
+<script>
+"use strict";
+/* =====================================================================
+   Complex number helpers
+   ===================================================================== */
+const cx = (re, im = 0) => ({ re, im });
+const cadd = (a, b) => cx(a.re + b.re, a.im + b.im);
+const csub = (a, b) => cx(a.re - b.re, a.im - b.im);
+const cmul = (a, b) => cx(a.re * b.re - a.im * b.im, a.re * b.im + a.im * b.re);
+const cdiv = (a, b) => {
+  const d = b.re * b.re + b.im * b.im;
+  if (d < 1e-30) throw new Error("Complex divide by zero");
+  return cx((a.re * b.re + a.im * b.im) / d, (a.im * b.re - a.re * b.im) / d);
+};
+const cabs = a => Math.hypot(a.re, a.im);
+const carg = a => Math.atan2(a.im, a.re) * 180 / Math.PI;
+const cscale = (a, s) => cx(a.re * s, a.im * s);
+
+/* Gauss–Jordan solve for complex linear system */
+function solveComplex(A, b) {
+  const n = b.length;
+  for (let col = 0; col < n; col++) {
+    let piv = col;
+    for (let r = col + 1; r < n; r++) if (cabs(A[r][col]) > cabs(A[piv][col])) piv = r;
+    if (cabs(A[piv][col]) < 1e-14) throw new Error("Singular matrix — ตรวจค่าตัวต้าน/คาปาซิเตอร์");
+    if (piv !== col) { [A[col], A[piv]] = [A[piv], A[col]]; [b[col], b[piv]] = [b[piv], b[col]]; }
+    const d = A[col][col];
+    for (let c = col; c < n; c++) A[col][c] = cdiv(A[col][c], d);
+    b[col] = cdiv(b[col], d);
+    for (let r = 0; r < n; r++) {
+      if (r === col) continue;
+      const f = A[r][col];
+      if (cabs(f) < 1e-18) continue;
+      for (let c = col; c < n; c++) A[r][c] = csub(A[r][c], cmul(f, A[col][c]));
+      b[r] = csub(b[r], cmul(f, b[col]));
+    }
+  }
+  return b;
+}
+
+/* =====================================================================
+   Parameter parsing / validation
+   ===================================================================== */
+const IDS = ["VCC","R1","R2","RC","RE","RL","Cin","Cout","beta","VBE","VT","VA","Rs","amp","freq"];
+const DEFAULTS = { VCC:12, R1:100, R2:22, RC:2.2, RE:1, RL:10, Cin:10, Cout:10,
+                   beta:100, VBE:0.7, VT:25, VA:100, Rs:50, amp:10, freq:1 };
+
+function readParams() {
+  const p = {};
+  IDS.forEach(id => {
+    const raw = document.getElementById(id).value.trim();
+    const v = Number(raw);
+    if (raw === "" || !Number.isFinite(v)) throw new Error(`ช่อง "${id}" ไม่ใช่ตัวเลข`);
+    p[id] = v;
+  });
+  ["VCC","R1","R2","RC","RE","RL","Cin","Cout"].forEach(k => {
+    if (p[k] <= 0) throw new Error(`${k} ต้องมากกว่า 0`);
+  });
+  if (p.beta <= 0) throw new Error("β ต้องมากกว่า 0");
+  if (p.VBE < 0.2 || p.VBE > 1.5) throw new Error("VBE ควรอยู่ในช่วง 0.2–1.5 V");
+  if (p.VT <= 0) throw new Error("VT ต้องมากกว่า 0");
+  if (p.VA < 0) throw new Error("VA ห้ามติดลบ");
+  if (p.Rs < 0) throw new Error("Rs ห้ามติดลบ");
+  if (p.amp < 0) throw new Error("Amplitude ห้ามติดลบ");
+  if (p.freq <= 0) throw new Error("Frequency ต้องมากกว่า 0");
+  // convert displayed engineering units to SI
+  p.R1 *= 1e3; p.R2 *= 1e3; p.RC *= 1e3; p.RE *= 1e3; p.RL *= 1e3;
+  p.Cin *= 1e-6; p.Cout *= 1e-6;
+  p.VT /= 1e3; p.amp /= 1e3; p.freq *= 1e3;
+  return p;
+}
+
+/* =====================================================================
+   DC operating point (Thevenin approximation)
+   ===================================================================== */
+function dcSolve(p) {
+  const Vth = p.VCC * p.R2 / (p.R1 + p.R2);
+  const Rth = p.R1 * p.R2 / (p.R1 + p.R2);
+  let region, IB = 0, IC = 0, VB = 0, VE = 0, VC = p.VCC, VCE = p.VCC;
+  if (Vth <= p.VBE) {
+    region = "cutoff (VTH ≤ VBE)";
+  } else {
+    IB = (Vth - p.VBE) / (Rth + (p.beta + 1) * p.RE);
+    IC = p.beta * IB;
+    VE = (p.beta + 1) * IB * p.RE;
+    VB = VE + p.VBE;
+    VC = p.VCC - IC * p.RC;
+    VCE = VC - VE;
+    if (VCE < 0.2) {
+      region = "saturation (approx)";
+      IC = (p.VCC - 0.2) / (p.RC + p.RE);
+      VE = IC * p.RE;
+      VB = VE + 0.8;
+      VC = VE + 0.2;
+      VCE = 0.2;
+      IB = IC / p.beta;
+    } else {
+      region = VCE < 1 ? "near saturation" : "active";
+    }
+  }
+  return { Vth, Rth, VB, VE, VC, VCE, IB, IC, region };
+}
+
+/* =====================================================================
+   Small-signal nodal solver at one frequency
+   Nodes: s (after Rs), b, e, c, o. Source phasor Vs given.
+   ===================================================================== */
+function solveAC(f, p, op, Vs) {
+  const w = 2 * Math.PI * f;
+  const gm = op.IC / p.VT;
+  const rpi = p.beta / gm;
+  const ro = p.VA > 0 ? p.VA / Math.max(op.IC, 1e-12) : Infinity;
+  const Gpi = 1 / rpi, Gmu = isFinite(ro) ? 1 / ro : 0;
+  const Gre = 1 / p.RE, Grc = 1 / p.RC, Grl = 1 / p.RL;
+  const G1 = 1 / p.R1, G2 = 1 / p.R2, Gs = p.Rs > 0 ? 1 / p.Rs : 1e12;
+  const Yci = cx(0, w * p.Cin), Yco = cx(0, w * p.Cout);
+  const z = cx(0, 0);
+
+  const A = [
+    [cx(Gs + Yci.re, Yci.im), cscale(Yci, -1), z, z, z],
+    [cscale(Yci, -1), cx(Yci.re + G1 + G2 + Gpi, Yci.im), cx(-Gpi, 0), z, z],
+    [z, cx(-Gpi - gm, 0), cx(Gpi + Gre + Gmu + gm, 0), cx(-Gmu, 0), z],
+    [z, cx(gm, 0), cx(-Gmu - gm, 0), cx(Gmu + Grc + Yco.re, Yco.im), cscale(Yco, -1)],
+    [z, z, z, cscale(Yco, -1), cx(Yco.re + Grl, Yco.im)]
+  ];
+  const rhs = [cscale(Vs, Gs), z, z, z, z];
+  const x = solveComplex(A, rhs);
+  const Vb = x[1], Ve = x[2], Vc = x[3], Vo = x[4];
+  return { Vb, Ve, Vc, Vo, gm, rpi, ro,
+           Zin: cdiv(cx(1,0), cx(G1 + G2 + 1 / (rpi + (p.beta + 1) * p.RE), 0)),
+           Avb: cdiv(Vo, Vb), Avs: cdiv(Vo, Vs) };
+}
+
+/* =====================================================================
+   Full simulation: DC + AC sweep + transient
+   ===================================================================== */
+let last = null;
+let mode = "dc";
+
+function simulate() {
+  const p = readParams();
+  const op = dcSolve(p);
+  if (op.IC <= 0) throw new Error("Circuit ในสภาวะ cutoff — ปรับ VCC/R1/R2 ให้ VTH > VBE");
+
+  // AC sweep
+  const N = 220, fLo = 0.1, fHi = 1e7;
+  const freqs = [], mags = [], phases = [], avbs = [];
+  for (let i = 0; i < N; i++) {
+    const f = fLo * Math.pow(fHi / fLo, i / (N - 1));
+    const r = solveAC(f, p, op, cx(1, 0));
+    freqs.push(f);
+    mags.push(cabs(r.Avb));
+    phases.push(carg(r.Avb));
+    avbs.push(r.Avb);
+  }
+  let imax = 0;
+  for (let i = 1; i < N; i++) if (mags[i] > mags[imax]) imax = i;
+  const mpeak = mags[imax], threshold = mpeak / Math.SQRT2;
+  let iL = -1, iH = -1;
+  for (let i = 0; i < N; i++) if (mags[i] >= threshold) { iL = i; break; }
+  for (let i = N - 1; i >= 0; i--) if (mags[i] >= threshold) { iH = i; break; }
+  const fL = iL === 0 || iL < 0 ? null : freqs[iL];
+  const fH = iH === N - 1 || iH < 0 ? null : freqs[iH];
+
+  // Transient at selected source frequency (small-signal steady state)
+  const tr = solveAC(p.freq, p, op, cx(p.amp, 0));
+  const periods = 3, T = 1 / p.freq, nT = 260;
+  const t = [], vin = [], vout = [];
+  for (let i = 0; i < nT; i++) {
+    const tt = periods * T * i / (nT - 1);
+    const ang = 2 * Math.PI * p.freq * tt;
+    const vb = cadd(cscale(tr.Vb, Math.cos(ang)), cx(-tr.Vb.im * Math.sin(ang), tr.Vb.re * Math.sin(ang)));
+    const vo = cadd(cscale(tr.Vo, Math.cos(ang)), cx(-tr.Vo.im * Math.sin(ang), tr.Vo.re * Math.sin(ang)));
+    t.push(tt * 1e3); vin.push(vb.re * 1e3); vout.push(vo.re * 1e3);
+  }
+
+  return { p, op, freqs, mags, phases, imax, mpeak, fL, fH,
+           midGainDb: 20 * Math.log10(mpeak), tr, t, vin, vout,
+           f0gainDb: 20 * Math.log10(cabs(tr.Avb)),
+           f0phase: carg(tr.Avb), Zin: tr.Zin };
+}
+
+/* =====================================================================
+   SVG plotting helpers
+   ===================================================================== */
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, text) {
+  const n = document.createElementNS(NS, tag);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+function clearSvg(svg) { while (svg.firstChild) svg.removeChild(svg.firstChild); }
+
+function niceTicks(min, max, count) {
+  if (!(max > min)) { max = min + 1; }
+  const raw = (max - min) / count;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const norm = raw / mag;
+  const step = (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10) * mag;
+  const out = [];
+  for (let v = Math.ceil(min / step) * step; v <= max + step * 1e-6; v += step) out.push(v);
+  return out;
+}
+
+function renderLine(svg, opts) {
+  clearSvg(svg);
+  const W = 660, H = 280, m = { l: 60, r: 18, t: 18, b: 44 };
+  const pw = W - m.l - m.r, ph = H - m.t - m.b;
+  const series = opts.series.filter(s => s.points.length > 1);
+  if (!series.length) { svg.appendChild(el("text", { x: 20, y: 30, fill: "#486275" }, "ไม่มีข้อมูล")); return; }
+
+  let xmin = Infinity, xmax = -Infinity, ymin = Infinity, ymax = -Infinity;
+  series.forEach(s => s.points.forEach(pt => {
+    const x = opts.xLog ? Math.log10(Math.max(pt.x, 1e-12)) : pt.x;
+    xmin = Math.min(xmin, x); xmax = Math.max(xmax, x);
+    ymin = Math.min(ymin, pt.y); ymax = Math.max(ymax, pt.y);
+  }));
+  if (opts.includeZero !== false) { ymin = Math.min(ymin, 0); ymax = Math.max(ymax, 0); }
+  if (xmax - xmin < 1e-12) { xmin -= 1; xmax += 1; }
+  if (ymax - ymin < 1e-12) { ymin -= 1; ymax += 1; }
+  const padY = (ymax - ymin) * 0.08; ymin -= padY; ymax += padY;
+  const sx = x => m.l + (x - xmin) / (xmax - xmin) * pw;
+  const sy = y => m.t + ph - (y - ymin) / (ymax - ymin) * ph;
+
+  // grid + y labels
+  const yt = niceTicks(ymin, ymax, 5);
+  yt.forEach(v => {
+    const y = sy(v);
+    if (y < m.t - 1 || y > m.t + ph + 1) return;
+    svg.appendChild(el("line", { x1: m.l, y1: y, x2: m.l + pw, y2: y, stroke: "#e3edf3", "stroke-width": 1 }));
+    svg.appendChild(el("text", { x: m.l - 7, y: y + 3.5, "text-anchor": "end", fill: "#547084", "font-size": 10 },
+      (Math.abs(v) >= 1000 ? (v / 1000).toFixed(1) + "k" : Number(v.toFixed(2)).toString())));
+  });
+  // x ticks
+  let xt;
+  if (opts.xLog) {
+    xt = [];
+    for (let d = Math.floor(xmin); d <= Math.ceil(xmax); d++) {
+      for (const mul of [1, 2, 5]) {
+        const lx = d + Math.log10(mul);
+        if (lx >= xmin && lx <= xmax) xt.push({ x: lx, label: fmtFreq(Math.pow(10, lx)) });
+      }
+    }
+  } else xt = niceTicks(xmin, xmax, 6)
+                   .map(v => ({ x: v, label: Number(v.toFixed(2)).toString() }));
+  xt.forEach(tk => {
+    const X = sx(tk.x);
+    if (X < m.l - 1 || X > m.l + pw + 1) return;
+    svg.appendChild(el("line", { x1: X, y1: m.t, x2: X, y2: m.t + ph, stroke: "#edf3f7", "stroke-width": 1 }));
+    svg.appendChild(el("text", { x: X, y: m.t + ph + 16, "text-anchor": "middle", fill: "#547084", "font-size": 10 }, tk.label));
+  });
+  // axes
+  svg.appendChild(el("line", { x1: m.l, y1: m.t, x2: m.l, y2: m.t + ph, stroke: "#9cb2c2", "stroke-width": 1.4 }));
+  svg.appendChild(el("line", { x1: m.l, y1: m.t + ph, x2: m.l + pw, y2: m.t + ph, stroke: "#9cb2c2", "stroke-width": 1.4 }));
+  svg.appendChild(el("text", { x: m.l + pw, y: H - 6, "text-anchor": "end", fill: "#486275", "font-size": 11 }, opts.xLabel));
+  svg.appendChild(el("text", { x: 14, y: m.t + 4, fill: "#486275", "font-size": 11 }, opts.yLabel));
+
+  // -3dB / reference markers
+  (opts.markers || []).forEach(mk => {
+    const xv = opts.xLog ? Math.log10(Math.max(mk.x, 1e-12)) : mk.x;
+    if (xv < xmin || xv > xmax) return;
+    const X = sx(xv);
+    svg.appendChild(el("line", { x1: X, y1: m.t, x2: X, y2: m.t + ph, stroke: mk.color || "#c8872f",
+                                 "stroke-width": 1.2, "stroke-dasharray": "5 4" }));
+    svg.appendChild(el("text", { x: X + 4, y: m.t + 12, fill: mk.color || "#a65a2c", "font-size": 10 }, mk.label));
+  });
+
+  // series
+  series.forEach(s => {
+    const d = s.points.map((pt, i) => {
+      const xv = opts.xLog ? Math.log10(Math.max(pt.x, 1e-12)) : pt.x;
+      return (i ? "L" : "M") + sx(xv).toFixed(2) + " " + sy(pt.y).toFixed(2);
+    }).join(" ");
+    svg.appendChild(el("path", { d, fill: "none", stroke: s.color, "stroke-width": s.width || 2,
+                                 "stroke-linejoin": "round", "stroke-linecap": "round" }));
+  });
+  // legend
+  const lg = document.getElementById(opts.legendId);
+  lg.innerHTML = "";
+  series.forEach(s => {
+    const span = document.createElement("span");
+    span.innerHTML = '<i style="background:' + s.color + '"></i>' + s.name;
+    lg.appendChild(span);
+  });
+}
+function fmtFreq(f) {
+  if (f >= 1e6) return (f / 1e6) + "M";
+  if (f >= 1e3) return (f / 1e3) + "k";
+  if (f < 1) return f.toFixed(2);
+  return Number(f.toFixed(2)).toString();
+}
+
+function renderBars(svg, items, legendId) {
+  clearSvg(svg);
+  const W = 660, H = 280, m = { l: 66, r: 58, t: 18, b: 24 };
+  const rowH = (H - m.t - m.b) / items.length;
+  const max = Math.max(...items.map(i => Math.abs(i.value)), 1e-9) * 1.15;
+  items.forEach((it, i) => {
+    const y = m.t + i * rowH + rowH * 0.22;
+    const bh = rowH * 0.52;
+    const w = Math.abs(it.value) / max * (W - m.l - m.r);
+    svg.appendChild(el("text", { x: m.l - 8, y: y + bh * 0.75, "text-anchor": "end", fill: "#254d67", "font-size": 12, "font-weight": 700 }, it.name));
+    svg.appendChild(el("rect", { x: m.l, y, width: W - m.l - m.r, height: bh, rx: 3, fill: "#eef4f8" }));
+    svg.appendChild(el("rect", { x: m.l, y, width: Math.max(w, 1), height: bh, rx: 3, fill: it.color }));
+    svg.appendChild(el("text", { x: m.l + w + 8, y: y + bh * 0.78, fill: "#17344b", "font-size": 12, "font-weight": 700 }, it.label));
+  });
+  const lg = document.getElementById(legendId);
+  lg.innerHTML = '<span>หน่วย: V (ยกเว้น IC/IB แสดงในผลทางขวา)</span>';
+}
+
+/* =====================================================================
+   Rendering per mode
+   ===================================================================== */
+function kvRow(k, v, unit) {
+  return "<dt>" + k + "</dt><dd>" + v + (unit ? " <small>" + unit + "</small>" : "") + "</dd>";
+}
+function f3(v) { return Number(v).toFixed(3); }
+
+function renderResults() {
+  const { p, op, tr } = last;
+  document.getElementById("lblVB").textContent = "VB = " + f3(op.VB) + " V";
+  document.getElementById("lblVE").textContent = "VE = " + f3(op.VE) + " V";
+  document.getElementById("lblVC").textContent = "VC = " + f3(op.VC) + " V";
+
+  const box = document.getElementById("resultBox");
+  let html = "";
+  if (mode === "dc") {
+    html = '<div class="rescard"><h4>DC Operating Point · .op</h4><dl class="kv">' +
+      kvRow("VTH", f3(op.Vth), "V") + kvRow("RTH", (op.Rth / 1e3).toFixed(2), "kΩ") +
+      kvRow("VB", f3(op.VB), "V") + kvRow("VE", f3(op.VE), "V") +
+      kvRow("VC", f3(op.VC), "V") + kvRow("VCE", f3(op.VCE), "V") +
+      kvRow("IB", (op.IB * 1e6).toFixed(2), "µA") + kvRow("IC", (op.IC * 1e3).toFixed(3), "mA") +
+      kvRow("Region", op.region, "") + "</dl></div>";
+    html += '<div class="rescard"><h4>Source</h4><dl class="kv">' +
+      kvRow("Model", "Thevenin + fixed VBE", "") +
+      kvRow("BJT", "β=" + p.beta + ", VBE=" + p.VBE + " V", "") + "</dl></div>";
+  } else if (mode === "ac") {
+    html = '<div class="rescard"><h4>AC Frequency Response · .ac</h4><dl class="kv">' +
+      kvRow("Midband gain", last.midGainDb.toFixed(2), "dB") +
+      kvRow("|Av| mid", last.mpeak.toFixed(2), "V/V") +
+      kvRow("Phase mid", last.phases[last.imax].toFixed(1), "deg") +
+      kvRow("fL (−3 dB)", last.fL ? fmtFreq(last.fL) + " Hz" : "not determined in sweep range", "") +
+      kvRow("fH (−3 dB)", last.fH ? fmtFreq(last.fH) + " Hz" : "not determined in sweep range", "") +
+      kvRow("Zin (mid)", (cabs(tr.Zin) / 1e3).toFixed(2), "kΩ") +
+      kvRow("gm", (tr.gm * 1e3).toFixed(2), "mS") +
+      kvRow("rπ", tr.rpi.toFixed(0), "Ω") +
+      (isFinite(tr.ro) ? kvRow("ro", (tr.ro / 1e3).toFixed(1), "kΩ") : "") +
+      "</dl></div>";
+  } else {
+    const inv = Math.max(...last.vin.map(Math.abs));
+    const outv = Math.max(...last.vout.map(Math.abs));
+    html = '<div class="rescard"><h4>Transient · .tran</h4><dl class="kv">' +
+      kvRow("Time window", (3 / p.freq * 1e3).toFixed(3), "ms") +
+      kvRow("Vin peak", inv.toFixed(2), "mV") +
+      kvRow("Vout peak", outv.toFixed(2), "mV") +
+      kvRow("Gain @ f0", last.f0gainDb.toFixed(2), "dB") +
+      kvRow("Phase @ f0", last.f0phase.toFixed(1), "deg") +
+      kvRow("Period T", (1 / p.freq * 1e3).toFixed(3), "ms") +
+      kvRow("Relationship", last.f0phase < -90 ? "≈180° (inverting)" : "non-inverting", "") +
+      "</dl></div>";
+  }
+  box.innerHTML = html;
+  document.getElementById("netlist").textContent = buildNetlist();
+}
+
+function buildNetlist() {
+  const p = last.p, op = last.op;
+  const k = v => Number(v).toPrecision(4);
+  return "* CE voltage-divider preview — ไฟล์นี้ไม่ได้รัน ngspice\n" +
+    "* ผลทางหน้าจอมาจาก JavaScript analytical model\n" +
+    "VCC VCC 0 DC " + k(p.VCC) + "\n" +
+    "R1 VCC B " + k(p.R1) + "\n" +
+    "R2 B 0 " + k(p.R2) + "\n" +
+    "RC VCC C " + k(p.RC) + "\n" +
+    "RE E 0 " + k(p.RE) + "\n" +
+    "RL OUT 0 " + k(p.RL) + "\n" +
+    "Cin IN B " + k(p.Cin) + "\n" +
+    "Cout C OUT " + k(p.Cout) + "\n" +
+    "VIN IN 0 AC 1 SIN(0 " + k(p.amp) + " " + k(p.freq) + ")\n" +
+    "Q1 C B E QNPN\n" +
+    ".model QNPN NPN(BF=" + p.beta + " VAF=" + (p.VA || 0) + ")\n" +
+    "* --- analyses ที่จะใช้ในโปรเจกต์จริง ---\n" +
+    ".op\n" +
+    ".ac dec 220 0.1 10Meg\n" +
+    ".tran " + k(1 / p.freq / 20) + " " + k(3 / p.freq) + "\n" +
+    ".end\n\n" +
+    "* DC preview (analytical): VB=" + op.VB.toFixed(3) + " VE=" + op.VE.toFixed(3) +
+    " VC=" + op.VC.toFixed(3) + " VCE=" + op.VCE.toFixed(3);
+}
+
+function renderAll() {
+  if (!last) return;
+  const p = last.p, op = last.op;
+  document.querySelectorAll(".modebar button").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.mode === mode)));
+
+  if (mode === "dc") {
+    document.getElementById("titleA").textContent = "DC node voltages";
+    document.getElementById("subA").textContent = "VB / VE / VC / VCE · หน่วย V · โมเดล Thevenin";
+    document.getElementById("titleB").textContent = "Bias headroom";
+    document.getElementById("subB").textContent = "VCE กับ VCC · ตรวจว่าอยู่ใน active region";
+    renderBars(document.getElementById("plotA"), [
+      { name: "VB", value: op.VB, label: f3(op.VB) + " V", color: "#167e93" },
+      { name: "VE", value: op.VE, label: f3(op.VE) + " V", color: "#0c8e83" },
+      { name: "VC", value: op.VC, label: f3(op.VC) + " V", color: "#a65a2c" },
+      { name: "VCE", value: op.VCE, label: f3(op.VCE) + " V", color: "#4d7fa9" }
+    ], "legendA");
+    renderBars(document.getElementById("plotB"), [
+      { name: "VCC", value: p.VCC, label: f3(p.VCC) + " V", color: "#103658" },
+      { name: "VCE", value: op.VCE, label: f3(op.VCE) + " V", color: "#4d7fa9" }
+    ], "legendB");
+  } else if (mode === "ac") {
+    document.getElementById("titleA").textContent = "Bode · Gain magnitude";
+    document.getElementById("subA").textContent = "20·log10|Vout/Vin| · dB · Vin วัดที่ base";
+    document.getElementById("titleB").textContent = "Bode · Phase";
+    document.getElementById("subB").textContent = "เฟสของ Vout/Vin · องศา";
+    const magDb = last.mags.map(v => 20 * Math.log10(Math.max(v, 1e-12)));
+    const markers = [
+      { x: last.fL || 0.1, label: "fL" + (last.fL ? " " + fmtFreq(last.fL) + "Hz" : " n/d"), color: "#a65a2c" },
+      { x: last.fH || 1e7, label: "fH " + (last.fH ? fmtFreq(last.fH) + "Hz" : "n/d >10M"), color: "#7a5232" }
+    ];
+    renderLine(document.getElementById("plotA"), {
+      xLog: true, xLabel: "Frequency (Hz)", yLabel: "Gain (dB)",
+      series: [{ name: "|Av| = Vout/Vin (dB)", color: "#167e93",
+                 points: last.freqs.map((f, i) => ({ x: f, y: magDb[i] })) }],
+      legendId: "legendA", markers
+    });
+    renderLine(document.getElementById("plotB"), {
+      xLog: true, xLabel: "Frequency (Hz)", yLabel: "Phase (deg)", includeZero: false,
+      series: [{ name: "∠Vout/Vin (deg)", color: "#0c8e83",
+                 points: last.freqs.map((f, i) => ({ x: f, y: last.phases[i] })) }],
+      legendId: "legendB"
+    });
+  } else {
+    document.getElementById("titleA").textContent = "Vin / Vout vs time";
+    document.getElementById("subA").textContent = "Small-signal steady-state · 3 periods · mV";
+    document.getElementById("titleB").textContent = "Vout vs Vin (phase locus)";
+    document.getElementById("subB").textContent = "เส้นโค้งเอียงลง = สัญญาณกลับเฟส ~180°";
+    renderLine(document.getElementById("plotA"), {
+      xLog: false, xLabel: "Time (ms)", yLabel: "Voltage (mV)",
+      series: [
+        { name: "Vin @ base", color: "#0c8e83", points: last.t.map((t, i) => ({ x: t, y: last.vin[i] })) },
+        { name: "Vout @ RL", color: "#c77a35", points: last.t.map((t, i) => ({ x: t, y: last.vout[i] })) }
+      ], legendId: "legendA"
+    });
+    renderLine(document.getElementById("plotB"), {
+      xLog: false, xLabel: "Vin (mV)", yLabel: "Vout (mV)", includeZero: false,
+      series: [{ name: "Vout/Vin locus", color: "#7a5232",
+                 points: last.vin.map((v, i) => ({ x: v, y: last.vout[i] })) }],
+      legendId: "legendB"
+    });
+  }
+  renderResults();
+}
+
+function setStatus(text, kind) {
+  document.getElementById("runStatus").textContent = text;
+  document.getElementById("runDot").className = "dot" + (kind ? " " + kind : "");
+}
+
+/* =====================================================================
+   Events
+   ===================================================================== */
+document.getElementById("simForm").addEventListener("submit", e => {
+  e.preventDefault();
+  try {
+    setStatus("Running analytical model…", "warn");
+    last = simulate();
+    IDS.forEach(id => document.getElementById(id).classList.remove("dirty"));
+    renderAll();
+    setStatus("Success · browser analytical model · " + new Date().toLocaleTimeString("th-TH"), "ok");
+  } catch (err) {
+    setStatus("Error · " + err.message, "bad");
+    document.getElementById("resultBox").innerHTML =
+      '<div class="rescard" style="border-color:#e0b4b4"><h4>Run failed</h4><p style="margin:0;color:#b23b3b">' + err.message + '</p></div>';
+  }
+});
+IDS.forEach(id => document.getElementById(id).addEventListener("input", () => {
+  document.getElementById(id).classList.add("dirty");
+  setStatus("Parameters changed · กด Run Simulation อีกครั้ง", "");
+}));
+document.getElementById("resetBtn").addEventListener("click", () => {
+  Object.keys(DEFAULTS).forEach(k => { document.getElementById(k).value = DEFAULTS[k]; document.getElementById(k).classList.remove("dirty"); });
+  document.getElementById("simForm").dispatchEvent(new Event("submit"));
+});
+document.querySelectorAll(".modebar button").forEach(b => b.addEventListener("click", () => {
+  mode = b.dataset.mode;
+  if (last) { renderAll(); setStatus("Viewing " + mode.toUpperCase() + " · ผลเดิมจากการรันล่าสุด", "ok"); }
+}));
+
+/* view tabs */
+document.getElementById("tab-sim").addEventListener("click", () => switchView("sim"));
+document.getElementById("tab-bias").addEventListener("click", () => switchView("bias"));
+function switchView(v) {
+  const sim = v === "sim";
+  document.getElementById("view-sim").hidden = !sim;
+  document.getElementById("view-bias").hidden = sim;
+  document.getElementById("tab-sim").setAttribute("aria-selected", String(sim));
+  document.getElementById("tab-bias").setAttribute("aria-selected", String(!sim));
+}
+
+/* Lab 3 bias calculator */
+function biasSolve(mode, p) {
+  const Vth = p.VCC * p.R2 / (p.R1 + p.R2);
+  const Rth = p.R1 * p.R2 / (p.R1 + p.R2);
+  let IB, VE, VB, VC, VCE;
+  if (mode === "Fixed") {
+    IB = (p.VCC - p.VBE) / p.RB; VE = 0; VB = p.VBE;
+    VC = p.VCC - p.beta * IB * p.RC; VCE = VC;
+  } else if (mode === "Emitter") {
+    IB = (p.VCC - p.VBE) / (p.RB + (p.beta + 1) * p.RE);
+    VE = (p.beta + 1) * IB * p.RE; VB = VE + p.VBE;
+    VC = p.VCC - p.beta * IB * p.RC; VCE = VC - VE;
+  } else {
+    if (Vth <= p.VBE) return { IB: 0, IC: 0, VB: 0, VE: 0, VC: p.VCC, VCE: p.VCC, region: "cutoff" };
+    IB = (Vth - p.VBE) / (Rth + (p.beta + 1) * p.RE);
+    VE = (p.beta + 1) * IB * p.RE; VB = VE + p.VBE;
+    VC = p.VCC - p.beta * IB * p.RC; VCE = VC - VE;
+  }
+  const IC = p.beta * IB;
+  return { IB, IC, VB, VE, VC, VCE, region: VCE < 0.2 ? "saturation" : VCE < 1 ? "near sat." : "active" };
+}
+document.getElementById("biasForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const g = id => Number(document.getElementById(id).value);
+  const p = { VCC: g("bVCC"), beta: g("bBeta"), VBE: g("bVBE"), RB: g("bRB") * 1e3,
+              RC: g("bRC") * 1e3, RE: g("bRE") * 1e3, R1: g("bR1") * 1e3, R2: g("bR2") * 1e3 };
+  if ([p.VCC,p.beta,p.RB,p.RC,p.RE,p.R1,p.R2].some(v => !Number.isFinite(v) || v <= 0) || p.beta <= 0) {
+    document.getElementById("biasBody").innerHTML = '<tr><td colspan="8" style="color:#b23b3b">Input ไม่ถูกต้อง — ตรวจค่าต้าน/β ให้มากกว่า 0</td></tr>';
+    return;
+  }
+  const rows = ["Fixed", "Emitter", "Divider"].map(m => {
+    const r = biasSolve(m, p);
+    return "<tr><td><strong>" + m + "</strong></td>" +
+      "<td class='num'>" + (r.IB * 1e6).toFixed(2) + "</td>" +
+      "<td class='num'>" + (r.IC * 1e3).toFixed(3) + "</td>" +
+      "<td class='num'>" + f3(r.VB) + "</td><td class='num'>" + f3(r.VE) + "</td>" +
+      "<td class='num'>" + f3(r.VC) + "</td><td class='num'>" + f3(r.VCE) + "</td>" +
+      "<td>" + r.region + "</td></tr>";
+  });
+  document.getElementById("biasBody").innerHTML = rows.join("");
+});
+
+/* initial run */
+document.getElementById("simForm").dispatchEvent(new Event("submit"));
+document.getElementById("biasForm").dispatchEvent(new Event("submit"));
+</script>
+</body>
+</html>

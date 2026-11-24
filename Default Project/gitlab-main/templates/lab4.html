@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lab 04: BJT CE Amplifier Simulator</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='lab4.css') }}">
+</head>
+<body class="lab4-page">
+<header class="topbar">
+  <div class="brand">
+    <svg class="chip-icon" viewBox="0 0 48 48" aria-hidden="true">
+      <rect x="12" y="12" width="24" height="24" rx="4"></rect>
+      <rect x="18" y="18" width="12" height="12" rx="2" class="chip-core"></rect>
+      <path d="M20 12V5M28 12V5M20 43v-7M28 43v-7M12 20H5M12 28H5M43 20h-7M43 28h-7"></path>
+    </svg>
+    <div>
+      <h1>Lab 04: BJT CE Amplifier Simulator</h1>
+      <p class="subtitle">ENG29 2121 – CE Voltage Divider · DC / AC / Transient via ngspice</p>
+    </div>
+  </div>
+  <div class="course-badge">
+    <span class="code-mark">&lt;/&gt;</span>
+    <span>Computer Programming<br>for Electrical Engineers</span>
+  </div>
+</header>
+
+<nav class="lab-nav" aria-label="Lab navigation">
+  <a href="/">← Lab 03 · DC Bias (3 modes)</a>
+  <span class="lab-nav-current">Lab 04 · CE SPICE Simulator</span>
+  <a href="/health">Engine health ↗</a>
+</nav>
+
+<main class="lab4-shell">
+  <div class="notice provenance">
+    <strong>Provenance:</strong> ผลในพื้นที่ <em>SPICE</em> มาจากการรัน <code>ngspice</code> จริงผ่าน
+    <code>spice_engine.py → subprocess.run([...])</code> ส่วน Lab 03 ใช้สมการประมาณใน
+    <code>bias.py</code> — อย่านำสองชุดมารวมกัน ถ้า Engine ไม่พร้อมระบบจะแสดง Error ไม่ใช่กราฟเก่า
+  </div>
+
+  {% if errors %}
+  <div class="notice bad" role="alert"><strong>Run failed:</strong> แก้ไขช่องที่ไฮไลต์ด้านล่างแล้ว Run ใหม่อีกครั้ง</div>
+  {% endif %}
+  {% if engine_error %}
+  <div class="notice bad" role="alert"><strong>Run failed:</strong> {{ engine_error }}</div>
+  {% endif %}
+
+  <div class="lab4-grid">
+    <section class="panel inputs">
+      <h2>Circuit &amp; Parameters</h2>
+      <form method="post" action="/lab4/run">
+        <fieldset>
+          <legend>Analysis mode</legend>
+          <div class="mode-buttons">
+            {% for value, label in mode_labels.items() %}
+            <label class="mode-button">
+              <input type="radio" name="analysis" value="{{ value }}"{% if mode == value %} checked{% endif %}>
+              <span>{{ label }}</span>
+            </label>
+            {% endfor %}
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>CE reference circuit</legend>
+          <div class="grid2">
+            {% for field in fields %}
+            <div class="field lab4-field">
+              <label for="l4_{{ field.name }}">
+                <span class="field-name">{{ field.label }}</span>
+                <span class="field-hint">{{ field.hint }}</span>
+              </label>
+              <div class="input-row">
+                <input id="l4_{{ field.name }}" name="{{ field.name }}"
+                       inputmode="decimal" value="{{ values.get(field.name, '') }}">
+                {% if field.units %}
+                <select name="{{ field.name }}_unit" aria-label="{{ field.label }} unit">
+                  {% for unit in field.units %}
+                  <option value="{{ unit }}"{% if units.get(field.name) == unit %} selected{% endif %}>{{ unit }}</option>
+                  {% endfor %}
+                </select>
+                {% else %}
+                <span class="unit-static" aria-hidden="true">–</span>
+                {% endif %}
+              </div>
+              {% if errors.get(field.name) %}
+              <p class="error">{{ errors.get(field.name) }}</p>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+          <p class="hint">
+            BJT model: ถ้าใส่ <b>Model params</b> จะใช้ค่านั้นแทน BF/VAF/IS —
+            ให้คัดลอกชื่อและพารามิเตอร์จาก Starter Kit ของอาจารย์
+            (ค่าเริ่มต้นเป็นค่าสาธิตเท่านั้น)
+          </p>
+          <button class="run-button" type="submit">
+            <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+            Run {{ mode_labels[mode].split('(')[0].strip() }}
+          </button>
+        </fieldset>
+      </form>
+    </section>
+
+    <section class="panel circuit">
+      <h2>Reference Circuit · CE Voltage Divider</h2>
+      <svg class="schematic lab4-schematic" viewBox="0 0 360 400" role="img"
+           aria-label="Common-emitter amplifier with voltage-divider bias, coupling capacitors and load">
+        <title>CE voltage-divider reference circuit</title>
+        <g class="wire">
+          <line x1="175" y1="24" x2="175" y2="40"></line>
+          <line x1="90" y1="40" x2="255" y2="40"></line>
+          <line x1="90" y1="40" x2="90" y2="54"></line>
+          <rect x="82" y="54" width="16" height="42" rx="2"></rect>
+          <line x1="90" y1="96" x2="90" y2="150"></line>
+          <line x1="255" y1="40" x2="255" y2="54"></line>
+          <rect x="247" y="54" width="16" height="42" rx="2"></rect>
+          <line x1="255" y1="96" x2="255" y2="150"></line>
+          <line x1="90" y1="150" x2="175" y2="188"></line>
+          <line x1="175" y1="172" x2="175" y2="204"></line>
+          <line x1="175" y1="180" x2="203" y2="162"></line>
+          <line x1="203" y1="162" x2="255" y2="150"></line>
+          <line x1="175" y1="196" x2="203" y2="214"></line>
+          <line x1="203" y1="214" x2="255" y2="230"></line>
+          <line x1="90" y1="150" x2="90" y2="196"></line>
+          <rect x="82" y="196" width="16" height="42" rx="2"></rect>
+          <line x1="90" y1="238" x2="90" y2="320"></line>
+          <line x1="255" y1="230" x2="255" y2="246"></line>
+          <rect x="247" y="246" width="16" height="42" rx="2"></rect>
+          <line x1="255" y1="288" x2="255" y2="320"></line>
+          <line x1="40" y1="320" x2="300" y2="320"></line>
+          <line x1="30" y1="150" x2="52" y2="150"></line>
+          <line x1="52" y1="128" x2="52" y2="172"></line>
+          <line x1="52" y1="132" x2="68" y2="142"></line>
+          <line x1="52" y1="168" x2="68" y2="158"></line>
+          <line x1="68" y1="150" x2="90" y2="150"></line>
+          <line x1="255" y1="288" x2="300" y2="288"></line>
+          <line x1="300" y1="288" x2="300" y2="320"></line>
+          <rect x="292" y="252" width="16" height="36" rx="2"></rect>
+          <circle class="node" cx="175" cy="24" r="3.5"></circle>
+        </g>
+        <g class="labels">
+          <text x="175" y="15" text-anchor="middle" class="value">VCC {{ schematic.vcc }}</text>
+          <text x="78" y="78" text-anchor="end">R1</text>
+          <text x="78" y="94" text-anchor="end" class="value">{{ schematic.r1 }}</text>
+          <text x="272" y="78">R2</text>
+          <text x="272" y="94" class="value">{{ schematic.r2 }}</text>
+          <text x="272" y="218">RC</text>
+          <text x="272" y="234" class="value">{{ schematic.rc }}</text>
+          <text x="272" y="270">RE</text>
+          <text x="272" y="286" class="value">{{ schematic.re }}</text>
+          <text x="310" y="268">RL</text>
+          <text x="310" y="284" class="value">{{ schematic.rl }}</text>
+          <text x="18" y="120">IN</text>
+          <text x="18" y="186" class="value">{{ schematic.amp }}</text>
+          <text x="18" y="202" class="value">{{ schematic.freq }}</text>
+          <text x="34" y="140" class="value">Cin {{ schematic.cin }}</text>
+          <text x="262" y="310" class="value">Cout {{ schematic.cout }}</text>
+          <text x="205" y="150">Q1</text>
+          <text x="205" y="166">NPN</text>
+          <text x="205" y="182" class="value">β {{ schematic.bf }}</text>
+        </g>
+      </svg>
+      <p class="soft">Vin วัดที่ <code>IN</code> ส่วน AC gain ในผลลัพธ์ใช้อ้างอิงที่ <code>BASE</code>
+      (หลัง Cin) และ Vout ที่ <code>OUT</code> บน RL — ระบุตำแหน่งวัดไว้เสมอ</p>
+    </section>
+
+    <section class="panel results">
+      <h2>Engineering Results</h2>
+
+      {% if sim %}
+      <div class="result-head">
+        <span class="badge">ngspice {{ sim.version }}</span>
+        {% if sim.model_source == 'instructor' %}
+        <span class="badge model-instructor">Starter Kit model</span>
+        {% else %}
+        <span class="badge model-demo">demo model — ไม่ใช่ค่าจาก Starter Kit</span>
+        {% endif %}
+        <span class="status ok">● {{ sim.status }} · {{ sim.mode|upper }}</span>
+      </div>
+      <p class="soft">{{ sim.provenance }}</p>
+      <p class="soft">{{ sim.reference }}</p>
+      <p class="soft">Model: <code>{{ sim.model }}</code></p>
+      {% if sim.model_source != 'instructor' %}
+      <p class="soft">โมเดลนี้เป็นค่าสาธิตสำหรับสาธิตวงจรเท่านั้น
+        อย่าใช้ผลลัพธ์สรุปการออกแบบจริงจนกว่าจะใส่พารามิเตอร์จาก Starter Kit</p>
+      {% endif %}
+
+      {% if sim.mode == 'dc' %}
+        <div class="cards">
+          <div class="card"><b>VB</b><span>{{ '%.4f'|format(sim.data.vb) }} V</span></div>
+          <div class="card"><b>VE</b><span>{{ '%.4f'|format(sim.data.ve) }} V</span></div>
+          <div class="card"><b>VC</b><span>{{ '%.4f'|format(sim.data.vc) }} V</span></div>
+          <div class="card"><b>VCE</b><span>{{ '%.4f'|format(sim.data.vce) }} V</span></div>
+          <div class="card"><b>IC</b><span>{{ '%.4f'|format(sim.data.ic_ma) }} mA</span></div>
+          <div class="card"><b>IB</b><span>{{ '%.3f'|format(sim.data.ib_ua) }} µA</span></div>
+          <div class="card"><b>Region</b><span>{{ sim.data.region }}</span></div>
+        </div>
+      {% elif sim.mode == 'ac' %}
+        <div class="cards">
+          <div class="card"><b>Midband gain</b><span>{{ '%.2f'|format(sim.data.midband_gain_db) }} dB</span></div>
+          <div class="card"><b>fL (−3 dB)</b><span>{{ 'not determined in sweep range' if sim.data.f_low_hz is none else (sim.data.f_low_hz|round(2)|string ~ ' Hz') }}</span></div>
+          <div class="card"><b>fH (−3 dB)</b><span>{{ 'not determined in sweep range' if sim.data.f_high_hz is none else (sim.data.f_high_hz|round(2)|string ~ ' Hz') }}</span></div>
+          <div class="card"><b>Sweep points</b><span>{{ sim.data.points }}</span></div>
+        </div>
+      {% else %}
+        <div class="cards">
+          <div class="card"><b>Vin peak</b><span>{{ '%.2f'|format(sim.data.vin_peak_mv) }} mV</span></div>
+          <div class="card"><b>Vout peak</b><span>{{ '%.2f'|format(sim.data.vout_peak_mv) }} mV</span></div>
+          <div class="card"><b>Gain @ f0</b><span>{{ '%.2f'|format(sim.data.gain_db) }} dB</span></div>
+          <div class="card"><b>Phase @ f0</b><span>{{ '%.1f'|format(sim.data.phase_deg) }}° · {{ sim.data.relationship }}</span></div>
+          <div class="card"><b>Samples</b><span>{{ sim.data.points }}</span></div>
+        </div>
+      {% endif %}
+
+      <figure class="chart">
+        <figcaption id="titleA">Simulation plot A</figcaption>
+        <svg id="plotA" viewBox="0 0 660 280" role="img" aria-label="Simulation plot A"></svg>
+      </figure>
+      <figure class="chart">
+        <figcaption id="titleB">Simulation plot B</figcaption>
+        <svg id="plotB" viewBox="0 0 660 220" role="img" aria-label="Simulation plot B"></svg>
+      </figure>
+
+      <details>
+        <summary>Netlist ที่ส่งให้ ngspice ({{ sim.mode|upper }})</summary>
+        <pre>{{ sim.netlist }}</pre>
+      </details>
+      <details>
+        <summary>ngspice run log (ท้าย ๆ)</summary>
+        <pre>{{ sim.log_excerpt }}</pre>
+      </details>
+    {% else %}
+      <p class="empty">ยังไม่มีการรัน — เลือก DC / AC / Transient แล้วกด Run</p>
+    {% endif %}
+    </section>
+  </div>
+
+  <footer class="panel goal">
+    <h2>Lab 04 Goal</h2>
+    <p>
+      ต่อยอดแอป Lab 03 ด้วย CE Voltage Divider อ้างอิงหนึ่งวงจร รัน <code>.op</code>,
+      <code>.ac</code> และ <code>.tran</code> ด้วย ngspice จริง แสดงตัวเลขพร้อมหน่วยและกราฟ
+      ที่มาจากผลรัน พร้อมตรวจ B1–B8 โดยไม่ทำให้ DC Bias 3 แบบเดิมเสีย
+    </p>
+  </footer>
+</main>
+
+<script>window.LAB4_SIM = {{ (sim | tojson) if sim else 'null' }};</script>
+<script src="{{ url_for('static', filename='lab4.js') }}"></script>
+</body>
+</html>
